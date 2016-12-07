@@ -1,0 +1,63 @@
+name: master
+owner: system
+version: 4.1
+product: ovirt
+arch: x86_64
+
+engine:
+  host: system-ge.local
+  mac-range: 00:1a:4a:c0:3f:00-00:1a:4a:c0:3f:0f
+
+hypervisors:
+  -
+    host: "ge-system-01.local"
+    os: "rhel-7.3"
+    nested: null
+  -
+    host: "ge-system-02.local"
+    os: "rhel-7.3"
+    nested: null
+  -
+    host: "ge-system-03.local"
+    os: "rhel-7.3"
+    nested: null
+
+storages:
+  -
+    type: "nfs"
+    address: "{nfs_storage_address}"
+    path: "/brq-ge/ge_system_nfs_0"
+  -
+    type: "nfs"
+    address: "{nfs_storage_address}"
+    path: "/brq-ge/ge_system_nfs_1"
+  -
+    type: "nfs"
+    address: "{nfs_storage_address}"
+    path: "/brq-ge/ge_system_nfs_2"
+  -
+    type: "export"
+    address: "{nfs_storage_address}"
+    path: "/brq-ge/ge_system_export_1"
+
+extra_storages:
+  -
+    type: "nfs"
+    address: "10.34.63.199"
+    path: "/brq-ge/extra_ge_system_nfs_0"
+  -
+    type: "nfs"
+    address: "10.34.63.199"
+    path: "/brq-ge/extra_ge_system_nfs_1"
+  -
+    type: "nfs"
+    address: "10.34.63.199"
+    path: "/brq-ge/extra_ge_system_nfs_2"
+
+extra_configuration_options:
+  not_4_nics_hosts: false
+  not_6_nics_hosts: false
+  no_full_sriov_support: true
+  no_semi_sriov_support: false
+  no_jumbo_frame_support: false
+  no_extra_bond_mode_support: false
