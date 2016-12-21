@@ -8,6 +8,7 @@ import (
 
 	"github.com/rgbkrk/libvirt-go"
 	"github.com/slaykovsky/gegen/src"
+
 	"gopkg.in/yaml.v2"
 )
 

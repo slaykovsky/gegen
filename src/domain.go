@@ -6,6 +6,8 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+const InstallLocation = "http://fedora.inode.at/releases/24/Server/x86_64/os/"
+
 // Domain represents libvirt guest domain object for XML generation
 type Domain struct {
 	XMLName       xml.Name `xml:"domain"`
