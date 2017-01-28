@@ -1,4 +1,4 @@
-package src
+package main
 
 import (
 	"encoding/xml"
@@ -6,13 +6,14 @@ import (
 	"path"
 
 	libvirt "github.com/rgbkrk/libvirt-go"
+	"github.com/satori/go.uuid"
 )
 
 const (
-	Byte     uint64 = 1
-	KibiByte        = 1024 * Byte
-	MebiByte        = 1024 * KibiByte
-	GibiByte        = 1024 * MebiByte
+	Byte uint64 = 1
+	KibiByte = 1024 * Byte
+	MebiByte = 1024 * KibiByte
+	GibiByte = 1024 * MebiByte
 	// Need is needed to check if there's enough space for setup
 	Need = 50 * GibiByte
 	// StoragePoolName is the default storage pool name to make volumes on
@@ -62,6 +63,33 @@ type StoragePool struct {
 	Target     StorageTarget
 }
 
+func NewPool() (string, error) {
+	storagePath := "/var/lib/libvirt/test_pool"
+	pool := StoragePool{
+		Name: "TestPool",
+		UUID: uuid.NewV4().String(),
+		Capacity: Memory{
+			Unit: "G",
+			Size: 50,
+		},
+		Allocation: Memory{
+			Unit: "G",
+			Size: 10,
+		},
+		Target: StorageTarget{
+			Path: storagePath,
+			Format: StorageFormat{
+				Type: "qcow2",
+			},
+		},
+	}
+	poolXml, err := xml.Marshal(&pool)
+	if err != nil {
+		return "", err
+	}
+	return string(poolXml), nil
+}
+
 // CheckStorage checks if it's enough space available
 func CheckStorage(p *libvirt.VirStoragePool) error {
 	poolInfo, err := p.GetInfo()
@@ -77,7 +105,7 @@ func CheckStorage(p *libvirt.VirStoragePool) error {
 
 // NewStorageVolume makes storage volume object
 func NewStorageVolume(name string, imgDir string) *StorageVolume {
-	path := path.Join(imgDir, name)
+	storagePath := path.Join(imgDir, name)
 
 	return &StorageVolume{
 		Name:       name,
@@ -87,7 +115,7 @@ func NewStorageVolume(name string, imgDir string) *StorageVolume {
 			Size: 10,
 		},
 		Target: StorageTarget{
-			Path: path,
+			Path: storagePath,
 			Format: StorageFormat{
 				Type: "qcow2",
 			},
@@ -103,9 +131,9 @@ func NewStorageVolume(name string, imgDir string) *StorageVolume {
 
 // AllocateVolume allocates volume on storage pool
 func AllocateVolume(
-	volumeName string,
-	imagesPath string,
-	pool *libvirt.VirStoragePool) (*StorageVolume, error) {
+volumeName string,
+imagesPath string,
+pool *libvirt.VirStoragePool) (*StorageVolume, error) {
 	storageVolume := NewStorageVolume(volumeName, imagesPath)
 	storageXML, err := xml.Marshal(storageVolume)
 	if err != nil {

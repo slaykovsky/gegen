@@ -1,4 +1,4 @@
-package src
+package main
 
 type CPU struct {
 	Arch          string `xml:"arch,omitempty"`

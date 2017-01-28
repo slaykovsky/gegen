@@ -1,4 +1,4 @@
-package src
+package main
 
 // Feature represents feature section in domain, cpu
 type Feature struct {

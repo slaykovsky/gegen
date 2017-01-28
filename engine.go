@@ -1,4 +1,4 @@
-package src
+package main
 
 // EngineConfig represents engine object
 type EngineConfig struct {

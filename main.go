@@ -7,8 +7,6 @@ import (
 	"os"
 
 	"github.com/rgbkrk/libvirt-go"
-	"github.com/slaykovsky/gegen/src"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -33,7 +31,7 @@ func main() {
 		panic(err.Error())
 	}
 
-	config := src.EngineConfig{}
+	config := EngineConfig{}
 
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
@@ -50,7 +48,7 @@ func main() {
 		panic(err.Error())
 	}
 
-	caps := src.Caps{}
+	caps := Caps{}
 
 	xml.Unmarshal([]byte(capsXML), &caps)
 
@@ -58,37 +56,47 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-
-	if len(virPools) == 0 {
-		panic(src.MakeError("No pools available!"))
-	}
-
 	// Get Storage Pool
 	var virPool libvirt.VirStoragePool
 
-	for _, e := range virPools {
-		name, err := e.GetName()
-		if name == src.StoragePoolName {
-			virPool = e
-			break
-		}
+	if len(virPools) == 0 {
+		//panic(src.MakeError("No pools available!"))
+		pool, err := NewPool()
 		if err != nil {
 			panic(err.Error())
 		}
-
-		isActive, err := e.IsActive()
+		virPool, err = c.StoragePoolDefineXML(
+			pool, libvirt.VIR_STORAGE_POOL_BUILD_NEW,
+		)
 		if err != nil {
 			panic(err.Error())
 		}
+	} else {
 
-		if !isActive {
-			if err = e.Create(0); err != nil {
+		for _, e := range virPools {
+			name, err := e.GetName()
+			if name == StoragePoolName {
+				virPool = e
+				break
+			}
+			if err != nil {
 				panic(err.Error())
+			}
+
+			isActive, err := e.IsActive()
+			if err != nil {
+				panic(err.Error())
+			}
+
+			if !isActive {
+				if err = e.Create(0); err != nil {
+					panic(err.Error())
+				}
 			}
 		}
 	}
 
-	if err = src.CheckStorage(&virPool); err != nil {
+	if err = CheckStorage(&virPool); err != nil {
 		panic(err.Error())
 	}
 
@@ -97,18 +105,18 @@ func main() {
 		panic(err.Error())
 	}
 
-	storagePool := &src.StoragePool{}
+	storagePool := &StoragePool{}
 	if err = xml.Unmarshal([]byte(virPoolXML), storagePool); err != nil {
 		panic(err)
 	}
 
 	// Create Storage Volume
 	imagesPath := storagePool.Target.Path
-	storageVolume, err := src.AllocateVolume(name, imagesPath, &virPool)
+	storageVolume, err := AllocateVolume(name, imagesPath, &virPool)
 
 	// Create Domain Here
 	diskPath := storageVolume.Target.Path
-	domain, err := src.NewDomain(name, diskPath, &caps)
+	domain, err := NewDomain(name, diskPath, &caps)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -122,6 +130,11 @@ func main() {
 	fmt.Printf("%v\n", domainXML)
 
 	_, err = c.DomainCreateXML(domainXML, libvirt.VIR_DOMAIN_NONE)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	err = InitrdInject("initrd", []string{"fedora.ks"}, "/tmp/initrd")
 	if err != nil {
 		panic(err.Error())
 	}
